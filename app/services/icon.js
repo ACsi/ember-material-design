@@ -32,6 +32,12 @@ Icon.prototype = {
   prepare: prepareAndStyle
 };
 
+Object.defineProperty(Icon.prototype, 'svg', {
+  get: function() {
+    return this.clone()[0];
+  }
+});
+
 /**
  * Clone the Icon DOM element
  */
@@ -65,7 +71,7 @@ function prepareAndStyle() {
 
 var IconService = Ember.Service.extend({
 
-  iconCache: {},
+  iconCache: Ember.Map.create(),
   templateCache: {},
 
   preloadIcons() {
@@ -115,19 +121,21 @@ var IconService = Ember.Service.extend({
     }
 
     if (urlRegex.test(id)) {
-      return this.loadByURL(id)
-        .then(this.cacheIcon(id));
+      return this.cacheIcon(id, this.loadByURL(id));
     }
 
     if (id.indexOf(':') == -1) {
       id = '$default:' + id;
     }
 
-    return this.loadByID(id)
+    if (this.get('iconCache').has(id)) {
+      return this.get('iconCache').get(id);
+    }
+
+    return this.cacheIcon(id, this.loadByID(id)
       .catch(Ember.run.bind(this, this.loadFromIconSet))
       .catch(this.announceIdNotFound)
-      .catch(this.announceNotFound)
-      .then(this.cacheIcon(id));
+      .catch(this.announceNotFound));
   },
 
   icon(id, url, viewBoxSize) {
@@ -235,13 +243,16 @@ var IconService = Ember.Service.extend({
     return (typeof target.element !== 'undefined') && (typeof target.config !== 'undefined');
   },
 
-  cacheIcon(id) {
-    var self = this;
-    return function updateCache(icon) {
-      self.iconCache[id] = self.isIcon(icon) ? icon : new Icon(icon, config[id]);
+  cacheIcon(id, promise) {
+    var iconCache = this.get('iconCache');
+    iconCache.set(id, promise.then(icon => {
+      icon = this.isIcon(icon) ? icon : new Icon(icon, config[id]);
+      iconCache.set(id, Ember.RSVP.Promise.resolve(icon));
 
-      return self.iconCache[id].clone();
-    }
+      return iconCache.get(id);
+    }));
+
+    return iconCache.get(id);
   }
 
 });

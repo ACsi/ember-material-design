@@ -32,8 +32,8 @@ var MdIcon = Ember.Component.extend(LayoutRules, StyleSafe, {
         if (iconName) {
             var is = this.get('iconService');
             is.getIcon(iconName)
-                .then(function(svg) {
-                    element.append(svg);
+                .then(function(icon) {
+                    element.append(icon.svg);
                 });
         }
     }),
