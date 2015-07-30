@@ -193,6 +193,15 @@ var IconService = Ember.Service.extend({
   },
 
   loadByURL(url) {
+    var ENV = this.container.lookupFactory('config:environment');
+
+    var urlWithBasedir = document.createElement('a');
+    urlWithBasedir.href = url;
+
+    if (window.location.hostname === urlWithBasedir.hostname) {
+      urlWithBasedir.pathName = ENV.baseURL + urlWithBasedir.pathName;
+      url = urlWithBasedir.href;
+    }
 
     // first check templateCache
 
