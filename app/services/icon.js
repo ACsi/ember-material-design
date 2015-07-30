@@ -199,7 +199,7 @@ var IconService = Ember.Service.extend({
     urlWithBasedir.href = url;
 
     if (window.location.hostname === urlWithBasedir.hostname) {
-      urlWithBasedir.pathName = ENV.baseURL + urlWithBasedir.pathname;
+      urlWithBasedir.pathname = ENV.baseURL + urlWithBasedir.pathname;
       url = urlWithBasedir.href;
     }
 
